@@ -1,0 +1,24 @@
+{
+  "name": "google-sites-to-moodle",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "adm-zip": "^0.5.17",
+    "archiver": "^5.3.2",
+    "express": "^5.2.1",
+    "pdfjs-dist": "^6.0.227",
+    "playwright": "^1.60.0",
+    "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "pdf-parse": "^2.4.5"
+  }
+}

@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GO! CVO Antwerpen — Google Sites naar Moodle H5P</title>
+  <style>
+    @font-face { font-family:'FlandersArtSans'; src:url('/fonts/FlandersArtSans-Light.otf') format('opentype'); font-weight:300; }
+    @font-face { font-family:'FlandersArtSans'; src:url('/fonts/FlandersArtSans-Regular.otf') format('opentype'); font-weight:400; }
+    @font-face { font-family:'FlandersArtSans'; src:url('/fonts/FlandersArtSans-Medium.otf') format('opentype'); font-weight:600; }
+    @font-face { font-family:'FlandersArtSans'; src:url('/fonts/FlandersArtSans-Bold.otf') format('opentype'); font-weight:700; }
+  </style>
+  <style>
+    :root {
+      --cvo-teal:       #34B0AD;  /* Pantone P 124-6 C — officieel primair */
+      --cvo-teal-dark:  #2A9994;  /* hover/actief */
+      --cvo-teal-light: #E8F7F7;
+      --cvo-gray:       #565657;  /* Pantone P 179-13 C — officieel grijs */
+      --cvo-gray-light: #f4f4f4;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'FlandersArtSans', 'Calibri', sans-serif;
+      background: var(--cvo-gray-light);
+      min-height: 100vh;
+      color: var(--cvo-gray);
+    }
+
+    header {
+      background: var(--cvo-teal);
+      color: white;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    header img.logo {
+      height: 48px;
+      width: auto;
+      filter: brightness(0) invert(1); /* wit logo */
+    }
+
+    header .header-text { border-left: 2px solid rgba(255,255,255,0.4); padding-left: 20px; }
+    header h1 { font-size: 18px; font-weight: 800; letter-spacing: 0.3px; }
+    header p { font-size: 12px; opacity: 0.9; margin-top: 2px; font-weight: 600; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      padding: 28px 32px;
+      margin-bottom: 24px;
+    }
+
+    .card h2 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 18px;
+      color: #1a202c;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .input-row input {
+      flex: 1;
+      padding: 11px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-row input:focus { border-color: var(--cvo-teal); }
+
+    .btn {
+      padding: 11px 24px;
+      background: var(--cvo-teal);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .btn:hover { background: var(--cvo-teal-dark); }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { background: #a0aec0; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: #f7fafc;
+      color: #2d3748;
+      border: 2px solid #e2e8f0;
+    }
+    .btn-secondary:hover { background: #edf2f7; }
+
+    .btn-green { background: #38a169; }
+    .btn-green:hover { background: #2f855a; }
+
+    .error-msg {
+      background: #fff5f5;
+      border: 1px solid #fed7d7;
+      color: #c53030;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    /* Progress */
+    #progress-card { display: none; }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-running { background: var(--cvo-teal-light); color: var(--cvo-teal-dark); }
+    .status-done { background: #f0fff4; color: #276749; }
+    .status-error { background: #fff5f5; color: #c53030; }
+
+    .spinner {
+      width: 12px; height: 12px;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .progress-bar-wrap {
+      background: #e2e8f0;
+      border-radius: 6px;
+      height: 8px;
+      margin: 14px 0;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--cvo-teal);
+      border-radius: 6px;
+      transition: width 0.4s;
+      width: 0%;
+    }
+
+    .log-box {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-family: 'Consolas', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      max-height: 200px;
+      overflow-y: auto;
+      color: #4a5568;
+    }
+
+    .log-box .log-ok { color: #276749; }
+    .log-box .log-err { color: #c53030; }
+    .log-box .log-info { color: var(--cvo-teal-dark); }
+
+    /* Results */
+    #results-card { display: none; }
+
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .stat-box {
+      flex: 1;
+      min-width: 120px;
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-box .num {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--cvo-teal);
+    }
+
+    .stat-box .label {
+      font-size: 12px;
+      color: #718096;
+      margin-top: 2px;
+    }
+
+    /* Tree */
+    .tree { margin-top: 8px; }
+
+    .tree-node {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+
+    .tree-node-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      background: #f7fafc;
+      transition: background 0.15s;
+    }
+
+    .tree-node-header:hover { background: #edf2f7; }
+
+    .tree-node-header .page-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .tree-node-header .page-title {
+      font-weight: 600;
+      font-size: 14px;
+      flex: 1;
+    }
+
+    .tree-node-header .page-url {
+      font-size: 11px;
+      color: #718096;
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tree-node-header .block-count {
+      background: #e2e8f0;
+      color: #4a5568;
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .tree-node-header .chevron {
+      color: #a0aec0;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .tree-node-header.open .chevron { transform: rotate(90deg); }
+
+    .tree-node-content {
+      display: none;
+      padding: 0 16px 16px;
+      background: white;
+    }
+
+    .tree-node-content.visible { display: block; }
+
+    /* Block preview */
+    .block-list { margin-top: 12px; }
+
+    .block-item {
+      display: flex;
+      gap: 10px;
+      padding: 6px 0;
+      border-bottom: 1px solid #f0f4f8;
+      font-size: 13px;
+      align-items: flex-start;
+    }
+
+    .block-item:last-child { border-bottom: none; }
+
+    .block-type {
+      flex-shrink: 0;
+      width: 80px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding-top: 1px;
+    }
+
+    .bt-heading { color: #744210; }
+    .bt-paragraph { color: #276749; }
+    .bt-list { color: var(--cvo-teal-dark); }
+    .bt-image { color: #553c9a; }
+
+    .block-text { color: #4a5568; line-height: 1.5; }
+    .block-text img { max-width: 120px; max-height: 60px; border-radius: 6px; object-fit: cover; }
+
+    .children-wrap {
+      margin-left: 24px;
+      margin-top: 8px;
+      border-left: 2px solid #e2e8f0;
+      padding-left: 16px;
+    }
+
+    .actions-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* H5P section */
+    .h5p-section {
+      margin-top: 20px;
+      border-top: 2px solid #e2e8f0;
+      padding-top: 20px;
+    }
+
+    .h5p-section h3 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .h5p-notice {
+      background: #fffbeb;
+      border: 1px solid #f6e05e;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #744210;
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+
+    .h5p-ready {
+      background: #f0fff4;
+      border: 1px solid #9ae6b4;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #276749;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-purple { background: var(--cvo-teal-dark); }
+    .btn-purple:hover { background: #27968D; }
+
+    .converting-spinner {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--cvo-teal-dark);
+      font-size: 13px;
+    }
+
+    /* Tooltip hint */
+    .hint {
+      font-size: 12px;
+      color: #718096;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img class="logo" src="/logo-cvo-wit.png" alt="GO! CVO Antwerpen">
+  <div class="header-text">
+    <h1>Google Sites → Moodle H5P</h1>
+    <p>Converteer een Google Site naar een interactief H5P-boek</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Input card -->
+  <div class="card">
+    <h2>📎 Google Sites URL</h2>
+    <div class="input-row">
+      <input type="url" id="urlInput"
+        placeholder="https://sites.google.com/cvoantwerpen.org/gooddesign"
+        value="https://sites.google.com/cvoantwerpen.org/gooddesign" />
+      <button class="btn" id="crawlBtn" onclick="startCrawl()">Crawlen</button>
+    </div>
+    <p class="hint">Vul het adres van een publieke Google Site in en klik op Crawlen.</p>
+    <div id="inputError" class="error-msg" style="display:none"></div>
+  </div>
+
+  <!-- Progress card -->
+  <div class="card" id="progress-card">
+    <h2>
+      ⚙️ Crawlen
+      <span id="statusBadge" class="status-badge status-running">
+        <span class="spinner"></span> Bezig…
+      </span>
+    </h2>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="log-box" id="logBox"></div>
+  </div>
+
+  <!-- Results card -->
+  <div class="card" id="results-card">
+    <h2>✅ Resultaat</h2>
+    <div class="stats-row" id="statsRow"></div>
+    <div class="actions-row">
+      <button class="btn btn-green" id="downloadBtn">⬇ Download JSON + afbeeldingen</button>
+      <button class="btn btn-secondary" onclick="resetForm()">↩ Nieuwe crawl</button>
+    </div>
+
+    <!-- H5P conversion section -->
+    <div class="h5p-section">
+      <h3>📚 Moodle H5P Interactive Book</h3>
+      <div class="h5p-notice">
+        <strong>Vereiste:</strong> H5P Interactive Book moet geïnstalleerd zijn in Moodle
+        (<em>Beheer → H5P → Inhoudstypen</em> → zoek op "Interactive Book").
+      </div>
+      <div id="h5pActions">
+        <button class="btn btn-purple" onclick="convertToH5P()">📖 Genereer H5P Interactive Book</button>
+      </div>
+      <div id="h5pConverting" style="display:none" class="converting-spinner">
+        <span class="spinner" style="border-color:var(--cvo-teal-dark); border-top-color:transparent"></span>
+        Bezig met genereren…
+      </div>
+      <div id="h5pReady" style="display:none" class="h5p-ready">
+        <span style="font-size:24px">✅</span>
+        <div>
+          <strong>H5P bestand klaar!</strong><br>
+          <span style="font-size:12px">Laad het .h5p bestand in via <em>Activiteit toevoegen → H5P</em> in Moodle.</span>
+        </div>
+        <button class="btn btn-purple" id="h5pDownloadBtn" style="margin-left:auto">⬇ Download .h5p</button>
+      </div>
+      <div id="h5pError" style="display:none" class="error-msg"></div>
+    </div>
+
+    <div class="tree" id="siteTree"></div>
+  </div>
+
+</div>
+
+<script>
+let currentJobId = localStorage.getItem('lastJobId') || null;
+let pollTimer = null;
+
+// On load: restore last completed job if server has it, otherwise reload from disk
+window.addEventListener('DOMContentLoaded', () => {
+  if (!currentJobId) return;
+  fetch(`/api/job/${currentJobId}`)
+    .then(r => r.json())
+    .then(job => {
+      if (job.status === 'done') { showResults(job); document.getElementById('progress-card').style.display = 'none'; }
+    })
+    .catch(() => {
+      // Server restarted — try to reload from disk
+      fetch(`/api/load/${currentJobId}`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+          if (data.ok) return fetch(`/api/job/${currentJobId}`).then(r => r.json());
+        })
+        .then(job => { if (job && job.status === 'done') showResults(job); })
+        .catch(() => {});
+    });
+});
+
+function startCrawl() {
+  const url = document.getElementById('urlInput').value.trim();
+  const errEl = document.getElementById('inputError');
+  errEl.style.display = 'none';
+
+  if (!url.startsWith('https://sites.google.com/')) {
+    errEl.textContent = 'Vul een geldig Google Sites URL in (begint met https://sites.google.com/)';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  document.getElementById('crawlBtn').disabled = true;
+  document.getElementById('progress-card').style.display = 'block';
+  document.getElementById('results-card').style.display = 'none';
+  document.getElementById('logBox').innerHTML = '';
+  document.getElementById('progressBar').style.width = '5%';
+  setStatus('running', 'Bezig…');
+
+  fetch('/api/crawl', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.error) { showError(data.error); return; }
+    currentJobId = data.jobId;
+    localStorage.setItem('lastJobId', currentJobId);
+    pollTimer = setInterval(pollJob, 1200);
+  })
+  .catch(err => showError(err.message));
+}
+
+function pollJob() {
+  if (!currentJobId) return;
+  fetch(`/api/job/${currentJobId}`)
+    .then(r => r.json())
+    .then(job => {
+      updateLog(job.log);
+      const pct = Math.min(5 + job.totalPages * 8, 90);
+      document.getElementById('progressBar').style.width = pct + '%';
+
+      if (job.status === 'done') {
+        clearInterval(pollTimer);
+        document.getElementById('progressBar').style.width = '100%';
+        setStatus('done', 'Klaar');
+        showResults(job);
+      } else if (job.status === 'error') {
+        clearInterval(pollTimer);
+        setStatus('error', 'Fout');
+        showError(job.error);
+      }
+    });
+}
+
+function updateLog(lines) {
+  const box = document.getElementById('logBox');
+  box.innerHTML = lines.map(line => {
+    if (line.startsWith('✓')) return `<div class="log-ok">${escHtml(line)}</div>`;
+    if (line.startsWith('✗') || line.startsWith('Fout')) return `<div class="log-err">${escHtml(line)}</div>`;
+    if (line.startsWith('Klaar')) return `<div class="log-info"><strong>${escHtml(line)}</strong></div>`;
+    return `<div>${escHtml(line)}</div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+function setStatus(type, label) {
+  const el = document.getElementById('statusBadge');
+  el.className = `status-badge status-${type}`;
+  el.innerHTML = type === 'running'
+    ? `<span class="spinner"></span> ${label}`
+    : label;
+}
+
+function showResults(job) {
+  document.getElementById('results-card').style.display = 'block';
+
+  // Stats
+  const blocks = job.result.site;
+  const totalBlocks = countBlocks(blocks);
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-box"><div class="num">${job.totalPages}</div><div class="label">Pagina's</div></div>
+    <div class="stat-box"><div class="num">${totalBlocks}</div><div class="label">Inhoudsblokken</div></div>
+    <div class="stat-box"><div class="num">${job.result.totalImages || countImages(blocks)}</div><div class="label">Afb. opgeslagen</div></div>
+  `;
+
+  // Download ZIP (JSON + images)
+  const siteName = (job.result.site.title || 'site').replace(/[^a-z0-9]/gi, '-').toLowerCase();
+  document.getElementById('downloadBtn').onclick = () => {
+    window.location = `/api/download/${job.result.site.url ? job.id || currentJobId : currentJobId}?name=${encodeURIComponent(siteName)}`;
+  };
+
+  // Tree
+  const tree = document.getElementById('siteTree');
+  tree.innerHTML = '';
+  tree.appendChild(renderNode(job.result.site, true));
+}
+
+function countBlocks(node) {
+  let n = (node.blocks || []).length;
+  for (const c of (node.children || [])) n += countBlocks(c);
+  return n;
+}
+function countImages(node) {
+  let n = (node.blocks || []).filter(b => b.type === 'image').length;
+  for (const c of (node.children || [])) n += countImages(c);
+  return n;
+}
+
+function renderNode(node, isRoot) {
+  const wrap = document.createElement('div');
+  wrap.className = 'tree-node';
+
+  const header = document.createElement('div');
+  header.className = 'tree-node-header';
+  const slug = node.url.split('/').pop() || 'home';
+  header.innerHTML = `
+    <span class="page-icon">${isRoot ? '🏠' : '📄'}</span>
+    <span class="page-title">${escHtml(node.title || slug)}</span>
+    <span class="page-url">${escHtml(node.url)}</span>
+    <span class="block-count">${(node.blocks || []).length} blokken</span>
+    <span class="chevron">▶</span>
+  `;
+
+  const content = document.createElement('div');
+  content.className = 'tree-node-content';
+
+  // Blocks
+  if (node.blocks && node.blocks.length) {
+    const blockList = document.createElement('div');
+    blockList.className = 'block-list';
+    for (const b of node.blocks) {
+      const item = document.createElement('div');
+      item.className = 'block-item';
+      item.innerHTML = blockHtml(b);
+      blockList.appendChild(item);
+    }
+    content.appendChild(blockList);
+  }
+
+  // Children
+  if (node.children && node.children.length) {
+    const childWrap = document.createElement('div');
+    childWrap.className = 'children-wrap';
+    for (const child of node.children) {
+      childWrap.appendChild(renderNode(child, false));
+    }
+    content.appendChild(childWrap);
+  }
+
+  header.addEventListener('click', () => {
+    header.classList.toggle('open');
+    content.classList.toggle('visible');
+  });
+
+  // Auto-open root
+  if (isRoot) {
+    header.classList.add('open');
+    content.classList.add('visible');
+  }
+
+  wrap.appendChild(header);
+  wrap.appendChild(content);
+  return wrap;
+}
+
+function blockHtml(b) {
+  if (b.type === 'heading') {
+    return `<span class="block-type bt-heading">H${b.level}</span>
+            <span class="block-text"><strong>${escHtml(b.text)}</strong></span>`;
+  }
+  if (b.type === 'paragraph') {
+    return `<span class="block-type bt-paragraph">Tekst</span>
+            <span class="block-text">${escHtml(b.text.slice(0, 120))}${b.text.length > 120 ? '…' : ''}</span>`;
+  }
+  if (b.type === 'list') {
+    return `<span class="block-type bt-list">Lijst</span>
+            <span class="block-text">${b.items.map(i => '• ' + escHtml(i.slice(0, 60))).join('<br>')}</span>`;
+  }
+  if (b.type === 'image') {
+    return `<span class="block-type bt-image">Afb.</span>
+            <span class="block-text"><img src="${escHtml(b.src)}" alt="${escHtml(b.alt)}" loading="lazy"></span>`;
+  }
+  return `<span class="block-type">${escHtml(b.type)}</span>`;
+}
+
+function escHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showError(msg) {
+  document.getElementById('crawlBtn').disabled = false;
+  const err = document.getElementById('inputError');
+  err.textContent = msg;
+  err.style.display = 'block';
+}
+
+function convertToH5P() {
+  document.getElementById('h5pActions').style.display = 'none';
+  document.getElementById('h5pConverting').style.display = 'flex';
+  document.getElementById('h5pReady').style.display = 'none';
+  document.getElementById('h5pError').style.display = 'none';
+
+  fetch(`/api/convert/${currentJobId}`, { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('h5pConverting').style.display = 'none';
+      if (data.error) {
+        document.getElementById('h5pError').textContent = data.error;
+        document.getElementById('h5pError').style.display = 'block';
+        document.getElementById('h5pActions').style.display = 'block';
+        return;
+      }
+      document.getElementById('h5pReady').style.display = 'flex';
+      document.getElementById('h5pDownloadBtn').onclick = () => {
+        window.location = `/api/h5p/${currentJobId}`;
+      };
+    })
+    .catch(err => {
+      document.getElementById('h5pConverting').style.display = 'none';
+      document.getElementById('h5pError').textContent = err.message;
+      document.getElementById('h5pError').style.display = 'block';
+      document.getElementById('h5pActions').style.display = 'block';
+    });
+}
+
+function resetForm() {
+  clearInterval(pollTimer);
+  currentJobId = null;
+  document.getElementById('crawlBtn').disabled = false;
+  document.getElementById('progress-card').style.display = 'none';
+  document.getElementById('results-card').style.display = 'none';
+  document.getElementById('inputError').style.display = 'none';
+  document.getElementById('h5pActions').style.display = 'block';
+  document.getElementById('h5pConverting').style.display = 'none';
+  document.getElementById('h5pReady').style.display = 'none';
+  document.getElementById('h5pError').style.display = 'none';
+}
+</script>
+</body>
+</html>
