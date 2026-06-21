@@ -382,6 +382,61 @@
       color: #718096;
       margin-top: 8px;
     }
+
+    /* Style picker */
+    .style-picker { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+    .style-card {
+      flex: 1; min-width: 190px;
+      border: 2px solid #e2e8f0; border-radius: 12px; overflow: hidden;
+      cursor: pointer; background: #fff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .style-card:hover { border-color: var(--cvo-teal); }
+    .style-card.selected { border-color: var(--cvo-teal); box-shadow: 0 0 0 3px var(--cvo-teal-light); }
+    .style-card .sc-label {
+      padding: 9px 12px 3px; font-size: 13px; font-weight: 700; color: #2d3748;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .style-card .sc-desc { padding: 0 12px 11px; font-size: 11px; color: #718096; line-height: 1.45; }
+    .sc-radio { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #cbd5e0; flex-shrink: 0; }
+    .style-card.selected .sc-radio { border-color: var(--cvo-teal); background: var(--cvo-teal); box-shadow: inset 0 0 0 2px #fff; }
+
+    /* Preview mockups */
+    .sc-preview { height: 112px; border-bottom: 1px solid #edf2f7; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; }
+    .scp-header { height: 24px; display: flex; align-items: center; padding: 0 8px; gap: 5px; flex-shrink: 0; }
+    .scp-body { flex: 1; display: flex; min-height: 0; }
+    .scp-nav { width: 36%; padding: 7px 6px; display: flex; flex-direction: column; gap: 5px; }
+    .scp-navitem { height: 6px; border-radius: 3px; background: #d8dde3; }
+    .scp-main { flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+    .scp-title { height: 9px; width: 70%; border-radius: 2px; }
+    .scp-line { height: 5px; border-radius: 2px; background: #e2e8f0; }
+    .scp-line.short { width: 55%; }
+    .scp-logo { width: 20px; height: 13px; border-radius: 2px; }
+    .scp-gtitle { width: 42px; height: 7px; border-radius: 2px; }
+
+    /* cvo preview */
+    .scp-cvo .scp-header { background: #fff; border-bottom: 2px solid var(--cvo-teal); }
+    .scp-cvo .scp-logo { background: var(--cvo-teal); }
+    .scp-cvo .scp-nav { background: #f4f4f4; }
+    .scp-cvo .scp-navitem.active { background: var(--cvo-teal); }
+    .scp-cvo .scp-title { background: var(--cvo-teal); }
+
+    /* modern preview */
+    .scp-modern .scp-header { background: var(--cvo-teal); }
+    .scp-modern .scp-logo { background: #fff; }
+    .scp-modern .scp-nav { background: #fff; }
+    .scp-modern .scp-navitem.active { background: var(--cvo-teal); }
+    .scp-modern .scp-main { background: #fff; margin: 5px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+    .scp-modern .scp-body { background: #f4f4f4; }
+    .scp-modern .scp-title { background: #1a202c; }
+
+    /* google preview */
+    .scp-google .scp-header { background: #fff; border-bottom: 1px solid #dadce0; }
+    .scp-google .scp-gtitle { background: #3c4043; }
+    .scp-google .scp-nav { background: #fff; }
+    .scp-google .scp-navitem { border-radius: 0 6px 6px 0; }
+    .scp-google .scp-navitem.active { background: #e8f0fe; }
+    .scp-google .scp-title { background: #9aa0a6; width: 62%; height: 11px; }
   </style>
 </head>
 <body>
@@ -465,6 +520,45 @@
         met navigatiemenu. Pak de ZIP uit en open <em>index.html</em> in een browser,
         of upload de map naar eender welke webhosting.
       </div>
+      <p class="hint" style="margin-bottom:10px"><strong>Kies een stijl:</strong></p>
+      <div class="style-picker">
+        <div class="style-card selected" data-style="cvo" onclick="selectStyle('cvo')">
+          <div class="sc-preview scp-cvo">
+            <div class="scp-header"><div class="scp-logo"></div></div>
+            <div class="scp-body">
+              <div class="scp-nav"><div class="scp-navitem active"></div><div class="scp-navitem"></div><div class="scp-navitem"></div></div>
+              <div class="scp-main"><div class="scp-title"></div><div class="scp-line"></div><div class="scp-line short"></div><div class="scp-line"></div></div>
+            </div>
+          </div>
+          <div class="sc-label"><span class="sc-radio"></span> CVO cursussjabloon</div>
+          <div class="sc-desc">Huisstijl uit het Word-cursussjabloon: logo, teal titels in hoofdletters, berglijnen-footer.</div>
+        </div>
+
+        <div class="style-card" data-style="modern" onclick="selectStyle('modern')">
+          <div class="sc-preview scp-modern">
+            <div class="scp-header"><div class="scp-logo"></div></div>
+            <div class="scp-body">
+              <div class="scp-nav"><div class="scp-navitem active"></div><div class="scp-navitem"></div><div class="scp-navitem"></div></div>
+              <div class="scp-main"><div class="scp-title"></div><div class="scp-line"></div><div class="scp-line short"></div><div class="scp-line"></div></div>
+            </div>
+          </div>
+          <div class="sc-label"><span class="sc-radio"></span> Modern (eerste versie)</div>
+          <div class="sc-desc">Strak en modern: teal headerbalk met wit logo, afgeronde kaart, donkere footer.</div>
+        </div>
+
+        <div class="style-card" data-style="google" onclick="selectStyle('google')">
+          <div class="sc-preview scp-google">
+            <div class="scp-header"><div class="scp-gtitle"></div></div>
+            <div class="scp-body">
+              <div class="scp-nav"><div class="scp-navitem active"></div><div class="scp-navitem"></div><div class="scp-navitem"></div></div>
+              <div class="scp-main"><div class="scp-title"></div><div class="scp-line"></div><div class="scp-line short"></div><div class="scp-line"></div></div>
+            </div>
+          </div>
+          <div class="sc-label"><span class="sc-radio"></span> Google Sites</div>
+          <div class="sc-desc">Zoals de oorspronkelijke Google Site: schoon, Roboto-lettertype, blauwe accenten.</div>
+        </div>
+      </div>
+
       <div id="htmlActions">
         <button class="btn btn-purple" onclick="convertToHtml()">🌐 Genereer HTML5-website</button>
       </div>
@@ -738,13 +832,26 @@ function convertToH5P() {
     });
 }
 
+let selectedStyle = 'cvo';
+
+function selectStyle(key) {
+  selectedStyle = key;
+  document.querySelectorAll('.style-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.style === key);
+  });
+}
+
 function convertToHtml() {
   document.getElementById('htmlActions').style.display = 'none';
   document.getElementById('htmlConverting').style.display = 'flex';
   document.getElementById('htmlReady').style.display = 'none';
   document.getElementById('htmlError').style.display = 'none';
 
-  fetch(`/api/convert-html/${currentJobId}`, { method: 'POST' })
+  fetch(`/api/convert-html/${currentJobId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ style: selectedStyle })
+  })
     .then(r => r.json())
     .then(data => {
       document.getElementById('htmlConverting').style.display = 'none';
