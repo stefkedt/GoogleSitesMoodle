@@ -402,41 +402,53 @@
     .style-card.selected .sc-radio { border-color: var(--cvo-teal); background: var(--cvo-teal); box-shadow: inset 0 0 0 2px #fff; }
 
     /* Preview mockups */
-    .sc-preview { height: 112px; border-bottom: 1px solid #edf2f7; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; }
-    .scp-header { height: 24px; display: flex; align-items: center; padding: 0 8px; gap: 5px; flex-shrink: 0; }
+    .sc-preview { height: 158px; border-bottom: 1px solid #edf2f7; display: flex; flex-direction: column; font-family: Arial, sans-serif; overflow: hidden; }
+    .scp-header { height: 30px; display: flex; align-items: center; padding: 0 9px; gap: 6px; flex-shrink: 0; }
+    .scp-header img { height: 15px; width: auto; display: block; }
     .scp-body { flex: 1; display: flex; min-height: 0; }
-    .scp-nav { width: 36%; padding: 7px 6px; display: flex; flex-direction: column; gap: 5px; }
-    .scp-navitem { height: 6px; border-radius: 3px; background: #d8dde3; }
-    .scp-main { flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
-    .scp-title { height: 9px; width: 70%; border-radius: 2px; }
+    .scp-nav { width: 36%; padding: 8px 7px; display: flex; flex-direction: column; gap: 6px; }
+    .scp-navitem { height: 6px; border-radius: 3px; background: #d8dde3; width: 88%; }
+    .scp-navitem.indent { width: 70%; margin-left: 12px; }
+    .scp-main { flex: 1; padding: 9px 10px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .scp-title { font-size: 9px; font-weight: 800; letter-spacing: 0.3px; line-height: 1.1; }
+    .scp-rule { height: 2px; border-radius: 2px; margin-top: 1px; }
     .scp-line { height: 5px; border-radius: 2px; background: #e2e8f0; }
     .scp-line.short { width: 55%; }
-    .scp-logo { width: 20px; height: 13px; border-radius: 2px; }
-    .scp-gtitle { width: 42px; height: 7px; border-radius: 2px; }
+    .scp-imgbox { height: 30px; border-radius: 4px; margin-top: 2px; }
+    .scp-footer { height: 26px; flex-shrink: 0; display: flex; align-items: center; }
+    .scp-footer img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    /* cvo preview */
+    /* cvo preview — wit logo-header + teal hoofdletter-titel + berglijnen-footer */
     .scp-cvo .scp-header { background: #fff; border-bottom: 2px solid var(--cvo-teal); }
-    .scp-cvo .scp-logo { background: var(--cvo-teal); }
     .scp-cvo .scp-nav { background: #f4f4f4; }
     .scp-cvo .scp-navitem.active { background: var(--cvo-teal); }
-    .scp-cvo .scp-title { background: var(--cvo-teal); }
+    .scp-cvo .scp-title { color: var(--cvo-teal); text-transform: uppercase; }
+    .scp-cvo .scp-rule { background: var(--cvo-teal); }
+    .scp-cvo .scp-imgbox { background: #0d2231; }
+    .scp-cvo .scp-footer { background: #fff; }
 
-    /* modern preview */
+    /* modern preview — teal balk, wit logo, witte kaart */
     .scp-modern .scp-header { background: var(--cvo-teal); }
-    .scp-modern .scp-logo { background: #fff; }
+    .scp-modern .scp-header img { filter: brightness(0) invert(1); }
+    .scp-modern .scp-body { background: #f4f4f4; }
     .scp-modern .scp-nav { background: #fff; }
     .scp-modern .scp-navitem.active { background: var(--cvo-teal); }
-    .scp-modern .scp-main { background: #fff; margin: 5px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
-    .scp-modern .scp-body { background: #f4f4f4; }
-    .scp-modern .scp-title { background: #1a202c; }
+    .scp-modern .scp-main { background: #fff; margin: 6px; border-radius: 7px; box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+    .scp-modern .scp-title { color: #1a202c; }
+    .scp-modern .scp-rule { background: var(--cvo-teal); }
+    .scp-modern .scp-imgbox { background: #0d2231; }
+    .scp-modern .scp-footer { background: #565657; }
 
-    /* google preview */
+    /* google preview — schone witte header, sitenaam, blauwe pil-nav */
+    .scp-google { font-family: 'Roboto', Arial, sans-serif; }
     .scp-google .scp-header { background: #fff; border-bottom: 1px solid #dadce0; }
-    .scp-google .scp-gtitle { background: #3c4043; }
+    .scp-google .scp-gtitle { font-size: 9px; color: #3c4043; font-weight: 500; }
     .scp-google .scp-nav { background: #fff; }
-    .scp-google .scp-navitem { border-radius: 0 6px 6px 0; }
+    .scp-google .scp-navitem { border-radius: 0 8px 8px 0; }
     .scp-google .scp-navitem.active { background: #e8f0fe; }
-    .scp-google .scp-title { background: #9aa0a6; width: 62%; height: 11px; }
+    .scp-google .scp-title { color: #5f6368; font-weight: 400; font-size: 11px; text-transform: none; }
+    .scp-google .scp-imgbox { background: #0d2231; border: 1px solid #dadce0; }
+    .scp-google .scp-footer { background: #f8f9fa; border-top: 1px solid #dadce0; }
   </style>
 </head>
 <body>
@@ -524,23 +536,33 @@
       <div class="style-picker">
         <div class="style-card selected" data-style="cvo" onclick="selectStyle('cvo')">
           <div class="sc-preview scp-cvo">
-            <div class="scp-header"><div class="scp-logo"></div></div>
+            <div class="scp-header"><img src="/logo-cvo.png" alt=""></div>
             <div class="scp-body">
-              <div class="scp-nav"><div class="scp-navitem active"></div><div class="scp-navitem"></div><div class="scp-navitem"></div></div>
-              <div class="scp-main"><div class="scp-title"></div><div class="scp-line"></div><div class="scp-line short"></div><div class="scp-line"></div></div>
+              <div class="scp-nav"><div class="scp-navitem active"></div><div class="scp-navitem indent"></div><div class="scp-navitem"></div></div>
+              <div class="scp-main">
+                <div class="scp-title">COMPOSITIE</div><div class="scp-rule"></div>
+                <div class="scp-line"></div><div class="scp-line short"></div>
+                <div class="scp-imgbox"></div>
+              </div>
             </div>
+            <div class="scp-footer"><img src="/brand-lines.png" alt=""></div>
           </div>
           <div class="sc-label"><span class="sc-radio"></span> CVO cursussjabloon</div>
-          <div class="sc-desc">Huisstijl uit het Word-cursussjabloon: logo, teal titels in hoofdletters, berglijnen-footer.</div>
+          <div class="sc-desc">Huisstijl uit het Word-cursussjabloon: logo, teal titels in hoofdletters, kleurrijke berglijnen-footer.</div>
         </div>
 
         <div class="style-card" data-style="modern" onclick="selectStyle('modern')">
           <div class="sc-preview scp-modern">
-            <div class="scp-header"><div class="scp-logo"></div></div>
+            <div class="scp-header"><img src="/logo-cvo.png" alt=""></div>
             <div class="scp-body">
-              <div class="scp-nav"><div class="scp-navitem active"></div><div class="scp-navitem"></div><div class="scp-navitem"></div></div>
-              <div class="scp-main"><div class="scp-title"></div><div class="scp-line"></div><div class="scp-line short"></div><div class="scp-line"></div></div>
+              <div class="scp-nav"><div class="scp-navitem active"></div><div class="scp-navitem indent"></div><div class="scp-navitem"></div></div>
+              <div class="scp-main">
+                <div class="scp-title">Compositie</div><div class="scp-rule"></div>
+                <div class="scp-line"></div><div class="scp-line short"></div>
+                <div class="scp-imgbox"></div>
+              </div>
             </div>
+            <div class="scp-footer"></div>
           </div>
           <div class="sc-label"><span class="sc-radio"></span> Modern (eerste versie)</div>
           <div class="sc-desc">Strak en modern: teal headerbalk met wit logo, afgeronde kaart, donkere footer.</div>
@@ -548,11 +570,16 @@
 
         <div class="style-card" data-style="google" onclick="selectStyle('google')">
           <div class="sc-preview scp-google">
-            <div class="scp-header"><div class="scp-gtitle"></div></div>
+            <div class="scp-header"><span class="scp-gtitle">Regels voor goed design</span></div>
             <div class="scp-body">
-              <div class="scp-nav"><div class="scp-navitem active"></div><div class="scp-navitem"></div><div class="scp-navitem"></div></div>
-              <div class="scp-main"><div class="scp-title"></div><div class="scp-line"></div><div class="scp-line short"></div><div class="scp-line"></div></div>
+              <div class="scp-nav"><div class="scp-navitem active"></div><div class="scp-navitem indent"></div><div class="scp-navitem"></div></div>
+              <div class="scp-main">
+                <div class="scp-title">Compositie</div>
+                <div class="scp-line"></div><div class="scp-line short"></div>
+                <div class="scp-imgbox"></div>
+              </div>
             </div>
+            <div class="scp-footer"></div>
           </div>
           <div class="sc-label"><span class="sc-radio"></span> Google Sites</div>
           <div class="sc-desc">Zoals de oorspronkelijke Google Site: schoon, Roboto-lettertype, blauwe accenten.</div>
