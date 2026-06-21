@@ -7,6 +7,7 @@ const http = require('http');
 const crypto = require('crypto');
 const archiver = require('archiver');
 const { buildH5PFile } = require('./h5p-builder');
+const { buildHtmlSite } = require('./html-builder');
 
 const app = express();
 app.use(express.json());
@@ -319,6 +320,32 @@ app.get('/api/h5p/:jobId', (req, res) => {
   const name = ((job && job.result && job.result.site && job.result.site.title) || 'interactive-book')
     .replace(/[^a-z0-9]/gi, '-').toLowerCase();
   res.download(h5pPath, `${name}.h5p`);
+});
+
+// Convert crawled site to a static HTML5 website
+app.post('/api/convert-html/:jobId', async (req, res) => {
+  const job = jobs[req.params.jobId];
+  if (!job || job.status !== 'done') return res.status(400).json({ error: 'Job niet klaar' });
+
+  const exportDir = path.join(__dirname, 'public', 'exports', req.params.jobId);
+  const imagesDir = path.join(exportDir, 'images');
+  const zipPath   = path.join(exportDir, 'html-site.zip');
+
+  try {
+    await buildHtmlSite(job.result, imagesDir, zipPath);
+    res.json({ htmlFile: `${req.params.jobId}/html-site.zip` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/html/:jobId', (req, res) => {
+  const zipPath = path.join(__dirname, 'public', 'exports', req.params.jobId, 'html-site.zip');
+  if (!fs.existsSync(zipPath)) return res.status(404).send('Niet gevonden');
+  const job = jobs[req.params.jobId];
+  const name = ((job && job.result && job.result.site && job.result.site.title) || 'html-site')
+    .replace(/[^a-z0-9]/gi, '-').toLowerCase();
+  res.download(zipPath, `${name}-website.zip`);
 });
 
 // Ensure exports dir exists

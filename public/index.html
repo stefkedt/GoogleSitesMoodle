@@ -457,6 +457,32 @@
       <div id="h5pError" style="display:none" class="error-msg"></div>
     </div>
 
+    <!-- HTML5 website export section -->
+    <div class="h5p-section">
+      <h3>🌐 Statische HTML5-website</h3>
+      <div class="h5p-notice" style="background:var(--cvo-teal-light); border-color:var(--cvo-teal); color:var(--cvo-teal-dark)">
+        Genereert een complete, op zichzelf staande website (HTML + CSS + afbeeldingen)
+        met navigatiemenu. Pak de ZIP uit en open <em>index.html</em> in een browser,
+        of upload de map naar eender welke webhosting.
+      </div>
+      <div id="htmlActions">
+        <button class="btn btn-purple" onclick="convertToHtml()">🌐 Genereer HTML5-website</button>
+      </div>
+      <div id="htmlConverting" style="display:none" class="converting-spinner">
+        <span class="spinner" style="border-color:var(--cvo-teal-dark); border-top-color:transparent"></span>
+        Bezig met genereren…
+      </div>
+      <div id="htmlReady" style="display:none" class="h5p-ready">
+        <span style="font-size:24px">✅</span>
+        <div>
+          <strong>HTML5-website klaar!</strong><br>
+          <span style="font-size:12px">Pak de ZIP uit en open <em>index.html</em>.</span>
+        </div>
+        <button class="btn btn-purple" id="htmlDownloadBtn" style="margin-left:auto">⬇ Download website (.zip)</button>
+      </div>
+      <div id="htmlError" style="display:none" class="error-msg"></div>
+    </div>
+
     <div class="tree" id="siteTree"></div>
   </div>
 
@@ -712,6 +738,35 @@ function convertToH5P() {
     });
 }
 
+function convertToHtml() {
+  document.getElementById('htmlActions').style.display = 'none';
+  document.getElementById('htmlConverting').style.display = 'flex';
+  document.getElementById('htmlReady').style.display = 'none';
+  document.getElementById('htmlError').style.display = 'none';
+
+  fetch(`/api/convert-html/${currentJobId}`, { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('htmlConverting').style.display = 'none';
+      if (data.error) {
+        document.getElementById('htmlError').textContent = data.error;
+        document.getElementById('htmlError').style.display = 'block';
+        document.getElementById('htmlActions').style.display = 'block';
+        return;
+      }
+      document.getElementById('htmlReady').style.display = 'flex';
+      document.getElementById('htmlDownloadBtn').onclick = () => {
+        window.location = `/api/html/${currentJobId}`;
+      };
+    })
+    .catch(err => {
+      document.getElementById('htmlConverting').style.display = 'none';
+      document.getElementById('htmlError').textContent = err.message;
+      document.getElementById('htmlError').style.display = 'block';
+      document.getElementById('htmlActions').style.display = 'block';
+    });
+}
+
 function resetForm() {
   clearInterval(pollTimer);
   currentJobId = null;
@@ -723,6 +778,10 @@ function resetForm() {
   document.getElementById('h5pConverting').style.display = 'none';
   document.getElementById('h5pReady').style.display = 'none';
   document.getElementById('h5pError').style.display = 'none';
+  document.getElementById('htmlActions').style.display = 'block';
+  document.getElementById('htmlConverting').style.display = 'none';
+  document.getElementById('htmlReady').style.display = 'none';
+  document.getElementById('htmlError').style.display = 'none';
 }
 </script>
 </body>
