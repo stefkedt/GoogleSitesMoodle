@@ -2,3 +2,5 @@ node_modules/
 public/exports/
 public/exports/**/*.h5p
 .env
+google-session.json
+*session*.json

@@ -10,7 +10,7 @@ const { buildH5PFile } = require('./h5p-builder');
 const { buildHtmlSite, listThemes } = require('./html-builder');
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '8mb' })); // ruimer i.v.m. geüploade sessie (cookies)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // In-memory job store
@@ -135,7 +135,7 @@ async function extractPageContent(page, url, imagesDir) {
   };
 }
 
-async function runCrawl(jobId, startUrl) {
+async function runCrawl(jobId, startUrl, session) {
   const job = jobs[jobId];
   job.status = 'running';
   job.log = [];
@@ -168,7 +168,9 @@ async function runCrawl(jobId, startUrl) {
         const context = await browser.newContext({
           userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
           // Zeer groot viewport: alle elementen zijn direct "in view" voor IntersectionObserver
-          viewport: { width: 1280, height: 8000 }
+          viewport: { width: 1280, height: 8000 },
+          // Ingelogde Google-sessie (optioneel) voor private sites
+          ...(session ? { storageState: session } : {})
         });
         const page = await context.newPage();
 
@@ -245,13 +247,23 @@ async function runCrawl(jobId, startUrl) {
 
 // API routes
 app.post('/api/crawl', (req, res) => {
-  const { url } = req.body;
+  const { url, session } = req.body;
   if (!url || !url.startsWith('https://sites.google.com/')) {
     return res.status(400).json({ error: 'Geef een geldig Google Sites URL op (https://sites.google.com/...)' });
   }
+
+  // Optionele ingelogde Google-sessie (voor private sites). Alleen in geheugen, niet op schijf.
+  let storageState;
+  if (session) {
+    if (typeof session !== 'object' || !Array.isArray(session.cookies)) {
+      return res.status(400).json({ error: 'Ongeldig sessiebestand. Genereer het opnieuw met capture-session.js.' });
+    }
+    storageState = session;
+  }
+
   const jobId = Date.now().toString();
-  jobs[jobId] = { id: jobId, status: 'starting', log: [], pages: [], startUrl: url };
-  runCrawl(jobId, url);
+  jobs[jobId] = { id: jobId, status: 'starting', log: [], pages: [], startUrl: url, authenticated: !!storageState };
+  runCrawl(jobId, url, storageState);
   res.json({ jobId });
 });
 

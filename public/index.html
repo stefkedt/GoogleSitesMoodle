@@ -383,6 +383,24 @@
       margin-top: 8px;
     }
 
+    /* Private-site sessie-upload */
+    .private-section { margin-top: 14px; border-top: 1px solid #edf2f7; padding-top: 12px; }
+    .private-section summary {
+      cursor: pointer; font-size: 13px; font-weight: 600; color: var(--cvo-teal-dark);
+      list-style: none; display: flex; align-items: center; gap: 6px;
+    }
+    .private-section summary::-webkit-details-marker { display: none; }
+    .private-section summary::before { content: '▸'; transition: transform 0.15s; }
+    .private-section[open] summary::before { transform: rotate(90deg); }
+    .private-body { font-size: 13px; color: #4a5568; line-height: 1.6; margin-top: 10px; }
+    .private-body ol { margin: 6px 0 10px 20px; }
+    .private-body code {
+      background: #f0f4f8; padding: 1px 6px; border-radius: 5px;
+      font-family: 'Consolas', monospace; font-size: 12px; color: #2d3748;
+    }
+    .private-body input[type=file] { font-size: 12px; margin-top: 4px; }
+    #sessionStatus { font-size: 12px; font-weight: 600; margin-left: 8px; }
+
     /* Style picker */
     .style-picker { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
     .style-card {
@@ -472,8 +490,25 @@
         value="https://sites.google.com/cvoantwerpen.org/gooddesign" />
       <button class="btn" id="crawlBtn" onclick="startCrawl()">Crawlen</button>
     </div>
-    <p class="hint">Vul het adres van een publieke Google Site in en klik op Crawlen.</p>
+    <p class="hint">Vul het adres van een Google Site in en klik op Crawlen.</p>
     <div id="inputError" class="error-msg" style="display:none"></div>
+
+    <details class="private-section">
+      <summary>🔒 Private site? Upload je Google-sessie</summary>
+      <div class="private-body">
+        Voor sites die niet openbaar zijn maar waar jij toegang toe hebt, heb je je ingelogde
+        Google-sessie nodig. Eenmalig vastleggen:
+        <ol>
+          <li>Open een terminal in de projectmap en draai: <code>node capture-session.js</code></li>
+          <li>Log in het geopende Chrome-venster in bij Google (ook 2FA).</li>
+          <li>Druk op <strong>Enter</strong> in de terminal — er ontstaat <code>google-session.json</code>.</li>
+          <li>Upload dat bestand hieronder en klik op Crawlen.</li>
+        </ol>
+        <input type="file" id="sessionFile" accept="application/json,.json" onchange="onSessionPicked()">
+        <span id="sessionStatus"></span>
+        <p class="hint" style="margin-top:8px">Je sessie wordt alleen in het geheugen gebruikt tijdens het crawlen en niet opgeslagen. Deel het bestand met niemand.</p>
+      </div>
+    </details>
   </div>
 
   <!-- Progress card -->
@@ -612,6 +647,29 @@
 <script>
 let currentJobId = localStorage.getItem('lastJobId') || null;
 let pollTimer = null;
+let sessionData = null; // ingelogde Google-sessie (alleen in deze tab, niet opgeslagen)
+
+function onSessionPicked() {
+  const input = document.getElementById('sessionFile');
+  const status = document.getElementById('sessionStatus');
+  const file = input.files[0];
+  if (!file) { sessionData = null; status.textContent = ''; return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!parsed || !Array.isArray(parsed.cookies)) throw new Error('geen geldig sessiebestand');
+      sessionData = parsed;
+      status.textContent = '✓ sessie geladen';
+      status.style.color = '#276749';
+    } catch (e) {
+      sessionData = null;
+      status.textContent = '✗ ongeldig bestand';
+      status.style.color = '#c53030';
+    }
+  };
+  reader.readAsText(file);
+}
 
 // On load: restore last completed job if server has it, otherwise reload from disk
 window.addEventListener('DOMContentLoaded', () => {
@@ -654,7 +712,7 @@ function startCrawl() {
   fetch('/api/crawl', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url })
+    body: JSON.stringify(sessionData ? { url, session: sessionData } : { url })
   })
   .then(r => r.json())
   .then(data => {
