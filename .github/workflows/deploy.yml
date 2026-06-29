@@ -58,4 +58,15 @@ jobs:
         run: |
           printf '%s' "$FIREBASE_SA" > "$RUNNER_TEMP/fb-sa.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/fb-sa.json"
-          npx -y firebase-tools@latest deploy --only hosting --project "${{ env.PROJECT_ID }}" --non-interactive
+          set +e
+          OUT=$(npx -y firebase-tools@latest deploy --only hosting --project "${{ env.PROJECT_ID }}" --non-interactive 2>&1)
+          CODE=$?
+          echo "$OUT"
+          if [ $CODE -ne 0 ]; then
+            # Geen nieuwe hosting-inhoud is geen echte fout
+            if echo "$OUT" | grep -q "is the current active version"; then
+              echo "Geen wijzigingen in hosting-inhoud — niets te publiceren. OK."
+              exit 0
+            fi
+            exit $CODE
+          fi
