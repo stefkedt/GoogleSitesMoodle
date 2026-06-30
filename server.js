@@ -106,23 +106,47 @@ async function extractPageContent(page, url, imagesDir) {
   const blocks = [];
 
   // Stap 1: tekst-elementen via gecombineerde locator (pierces shadow DOM)
-  const elements = await page.locator('h1, h2, h3, h4, h5, h6, p, li, img, iframe').evaluateAll(els => {
+  const elements = await page.locator('h1, h2, h3, h4, h5, h6, p, li, img, iframe, a').evaluateAll(els => {
+    const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    // Serialiseer de inhoud van een element en behoud alleen links (<a href>), escape de rest
+    const rich = (node) => {
+      let out = '';
+      node.childNodes.forEach(ch => {
+        if (ch.nodeType === 3) out += esc(ch.textContent);
+        else if (ch.nodeType === 1) {
+          const t = ch.tagName.toLowerCase();
+          if (t === 'a' && ch.href && !/^javascript:/i.test(ch.href)) {
+            out += '<a href="' + esc(ch.href) + '">' + rich(ch) + '</a>';
+          } else if (t === 'br') { out += ' '; }
+          else { out += rich(ch); }
+        }
+      });
+      return out;
+    };
     return els
       .filter(el => {
         if (el.closest('nav, header, [role="navigation"], [role="banner"]')) return false;
         const tag = el.tagName.toLowerCase();
         if ((tag === 'p' || /^h[1-6]$/.test(tag)) && el.closest('li')) return false;
+        // Losse links alleen als ze niet al binnen een verwerkt tekstelement zitten
+        if (tag === 'a' && el.closest('p, li, h1, h2, h3, h4, h5, h6')) return false;
         return true;
       })
       .map(el => {
         const tag = el.tagName.toLowerCase();
         if (tag === 'img') return { type: 'image', src: el.src || '', alt: el.alt || '' };
         if (tag === 'iframe') return { type: 'video', src: el.src || el.getAttribute('data-src') || '' };
+        if (tag === 'a') {
+          const text = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
+          if (!text || !el.href || /^javascript:/i.test(el.href)) return null;
+          return { type: 'link', text, href: el.href };
+        }
         const text = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
         if (!text) return null;
+        const hasLink = !!el.querySelector('a[href]');
         if (/^h[1-6]$/.test(tag)) return { type: 'heading', level: parseInt(tag[1]), text };
-        if (tag === 'p') return { type: 'paragraph', text };
-        if (tag === 'li') return { type: 'list-item', text };
+        if (tag === 'p') return hasLink ? { type: 'paragraph', text, html: rich(el).trim() } : { type: 'paragraph', text };
+        if (tag === 'li') return hasLink ? { type: 'list-item', text, html: rich(el).trim() } : { type: 'list-item', text };
         return null;
       })
       .filter(Boolean);
@@ -142,11 +166,15 @@ async function extractPageContent(page, url, imagesDir) {
     const el = elements[i];
     if (el.type === 'list-item') {
       const items = [el.text];
+      const itemsHtml = [el.html || null];
       while (i + 1 < elements.length && elements[i + 1].type === 'list-item') {
         i++;
         items.push(elements[i].text);
+        itemsHtml.push(elements[i].html || null);
       }
-      blocks.push({ type: 'list', items });
+      const block = { type: 'list', items };
+      if (itemsHtml.some(Boolean)) block.itemsHtml = itemsHtml;
+      blocks.push(block);
     } else if (el.type === 'image') {
       if (el.src && !el.src.startsWith('data:')) {
         const localSrc = imagesDir ? await downloadImage(el.src, imagesDir) : el.src;
@@ -176,6 +204,7 @@ async function extractPageContent(page, url, imagesDir) {
       const prev = blocks[i - 1];
       if (b.type === 'image') return b.src !== prev.src; // afbeeldingen: vergelijk op src
       if (b.type === 'video') return b.src !== prev.src; // video's: vergelijk op src
+      if (b.type === 'link') return !(prev.type === 'link' && b.href === prev.href && b.text === prev.text);
       return !(b.type === prev.type && b.text === prev.text);
     })
   };

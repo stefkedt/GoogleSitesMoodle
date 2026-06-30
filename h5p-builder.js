@@ -98,9 +98,14 @@ function blocksToColumnContent(blocks) {
     } else if (block.type === 'heading') {
       htmlBuffer += `<h${block.level}>${esc(block.text)}</h${block.level}>\n`;
     } else if (block.type === 'paragraph') {
-      htmlBuffer += `<p>${esc(block.text)}</p>\n`;
+      htmlBuffer += `<p>${block.html || esc(block.text)}</p>\n`;
     } else if (block.type === 'list') {
-      htmlBuffer += '<ul>' + block.items.map(i => `<li>${esc(i)}</li>`).join('') + '</ul>\n';
+      htmlBuffer += '<ul>' + block.items.map((it, i) => {
+        const h = block.itemsHtml && block.itemsHtml[i];
+        return `<li>${h || esc(it)}</li>`;
+      }).join('') + '</ul>\n';
+    } else if (block.type === 'link') {
+      htmlBuffer += `<p><a href="${esc(block.href)}">${esc(block.text)}</a></p>\n`;
     } else if (block.type === 'video') {
       if (block.provider === 'youtube') {
         flushText();

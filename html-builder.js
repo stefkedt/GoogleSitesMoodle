@@ -53,17 +53,34 @@ function flattenPages(root) {
   return pages;
 }
 
-// Render één inhoudsblok naar HTML
-function blockToHtml(block) {
+// Herschrijf links in een stuk HTML: interne links naar gecrawlde pagina's -> lokaal bestand
+function rewriteHtmlLinks(html, rewrite) {
+  if (!rewrite) return html;
+  return html.replace(/href="([^"]*)"/g, (m, h) => {
+    const local = rewrite(h.replace(/&amp;/g, '&'));
+    return 'href="' + (local ? esc(local) : h) + '"';
+  });
+}
+
+// Render één inhoudsblok naar HTML. `rewrite(href)` geeft een lokaal bestand terug of null.
+function blockToHtml(block, rewrite) {
   if (block.type === 'heading') {
     const lvl = Math.min(Math.max(block.level || 2, 2), 6); // h1 reserveren voor paginatitel
     return `<h${lvl}>${esc(block.text)}</h${lvl}>`;
   }
   if (block.type === 'paragraph') {
-    return `<p>${esc(block.text)}</p>`;
+    const inner = block.html ? rewriteHtmlLinks(block.html, rewrite) : esc(block.text);
+    return `<p>${inner}</p>`;
   }
   if (block.type === 'list') {
-    return '<ul>' + (block.items || []).map(i => `<li>${esc(i)}</li>`).join('') + '</ul>';
+    return '<ul>' + (block.items || []).map((it, i) => {
+      const h = block.itemsHtml && block.itemsHtml[i];
+      return `<li>${h ? rewriteHtmlLinks(h, rewrite) : esc(it)}</li>`;
+    }).join('') + '</ul>';
+  }
+  if (block.type === 'link') {
+    const local = rewrite && rewrite(block.href);
+    return `<p class="link-block"><a href="${esc(local || block.href)}">${esc(block.text)}</a></p>`;
   }
   if (block.type === 'image') {
     const src = esc(block.src);
@@ -94,10 +111,20 @@ function buildNav(root, currentFile) {
   return '<ul class="nav-tree">' + renderNode(root, true) + '</ul>';
 }
 
+// Normaliseer een URL (zoals de crawler) zodat we interne links kunnen matchen
+function normalizeUrl(url) {
+  try {
+    const u = new URL(url);
+    u.hash = ''; u.search = '';
+    u.pathname = u.pathname.replace(/\/$/, '') || '/';
+    return u.toString();
+  } catch { return url; }
+}
+
 // Bouw de volledige HTML voor één pagina
-function buildPageHtml(node, root, siteTitle, themeKey) {
+function buildPageHtml(node, root, siteTitle, themeKey, rewrite) {
   const nav = buildNav(root, node._file);
-  const blocksHtml = (node.blocks || []).map(blockToHtml).filter(Boolean).join('\n      ');
+  const blocksHtml = (node.blocks || []).map(b => blockToHtml(b, rewrite)).filter(Boolean).join('\n      ');
   const pageTitle = esc(node.title || siteTitle);
 
   return `<!DOCTYPE html>
@@ -178,6 +205,9 @@ figure img { height: auto; display: block; }
 figcaption { font-size: 13px; margin-top: 8px; font-style: italic; }
 .video-embed { position: relative; width: 100%; padding-top: 56.25%; margin: 22px 0; border-radius: 10px; overflow: hidden; background: #000; }
 .video-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+article a { text-decoration: underline; }
+.link-block { margin: 10px 0; }
+.link-block a { font-weight: 600; }
 .empty { font-style: italic; opacity: 0.6; }
 
 .site-footer { margin-top: auto; }
@@ -309,6 +339,11 @@ function buildHtmlSite(siteResult, imagesSourceDir, destPath, themeKey = 'cvo') 
     const siteTitle = root.title || 'Website';
     const pages = flattenPages(root);
 
+    // Map van gecrawlde pagina-URL -> lokaal bestand, voor interne link-herschrijving
+    const pageMap = {};
+    for (const { node } of pages) pageMap[normalizeUrl(node.url)] = node._file;
+    const rewrite = (href) => pageMap[normalizeUrl(href)] || null;
+
     const output = fs.createWriteStream(destPath);
     const archive = archiver('zip', { zlib: { level: 6 } });
 
@@ -321,7 +356,7 @@ function buildHtmlSite(siteResult, imagesSourceDir, destPath, themeKey = 'cvo') 
 
     // Eén HTML-bestand per pagina
     for (const { node } of pages) {
-      const html = buildPageHtml(node, root, siteTitle, themeKey);
+      const html = buildPageHtml(node, root, siteTitle, themeKey, rewrite);
       archive.append(html, { name: node._file });
     }
 

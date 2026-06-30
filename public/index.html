@@ -309,6 +309,7 @@
     .bt-list { color: var(--cvo-teal-dark); }
     .bt-image { color: #553c9a; }
     .bt-video { color: #c53030; }
+    .bt-link { color: #2b6cb0; }
 
     .block-text { color: #4a5568; line-height: 1.5; }
     .block-text img { max-width: 120px; max-height: 60px; border-radius: 6px; object-fit: cover; }
@@ -878,6 +879,10 @@ function blockHtml(b) {
   if (b.type === 'video') {
     return `<span class="block-type bt-video">Video</span>
             <span class="block-text">🎬 <a href="${escHtml(b.src)}" target="_blank" rel="noopener">${escHtml(b.provider || 'video')}</a></span>`;
+  }
+  if (b.type === 'link') {
+    return `<span class="block-type bt-link">Link</span>
+            <span class="block-text">🔗 <a href="${escHtml(b.href)}" target="_blank" rel="noopener">${escHtml(b.text)}</a></span>`;
   }
   return `<span class="block-type">${escHtml(b.type)}</span>`;
 }
