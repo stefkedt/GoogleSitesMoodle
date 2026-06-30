@@ -83,6 +83,8 @@ function blocksToColumnContent(blocks) {
       htmlBuffer += `<p>${esc(block.text)}</p>\n`;
     } else if (block.type === 'list') {
       htmlBuffer += '<ul>' + block.items.map(i => `<li>${esc(i)}</li>`).join('') + '</ul>\n';
+    } else if (block.type === 'video') {
+      htmlBuffer += `<p>🎬 Video: <a href="${esc(block.src)}">${esc(block.src)}</a></p>\n`;
     }
   }
   flushText();

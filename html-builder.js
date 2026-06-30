@@ -72,6 +72,10 @@ function blockToHtml(block) {
       block.alt ? `<figcaption>${alt}</figcaption>` : ''
     }</figure>`;
   }
+  if (block.type === 'video') {
+    const src = esc(block.src);
+    return `<div class="video-embed"><iframe src="${src}" title="${esc(block.provider || 'video')}" loading="lazy" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>`;
+  }
   return '';
 }
 
@@ -172,6 +176,8 @@ article li { margin-bottom: 6px; }
 figure { margin: 22px 0; }
 figure img { height: auto; display: block; }
 figcaption { font-size: 13px; margin-top: 8px; font-style: italic; }
+.video-embed { position: relative; width: 100%; padding-top: 56.25%; margin: 22px 0; border-radius: 10px; overflow: hidden; background: #000; }
+.video-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .empty { font-style: italic; opacity: 0.6; }
 
 .site-footer { margin-top: auto; }

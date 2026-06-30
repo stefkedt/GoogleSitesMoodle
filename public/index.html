@@ -308,6 +308,7 @@
     .bt-paragraph { color: #276749; }
     .bt-list { color: var(--cvo-teal-dark); }
     .bt-image { color: #553c9a; }
+    .bt-video { color: #c53030; }
 
     .block-text { color: #4a5568; line-height: 1.5; }
     .block-text img { max-width: 120px; max-height: 60px; border-radius: 6px; object-fit: cover; }
@@ -873,6 +874,10 @@ function blockHtml(b) {
   if (b.type === 'image') {
     return `<span class="block-type bt-image">Afb.</span>
             <span class="block-text"><img src="${escHtml(b.src)}" alt="${escHtml(b.alt)}" loading="lazy"></span>`;
+  }
+  if (b.type === 'video') {
+    return `<span class="block-type bt-video">Video</span>
+            <span class="block-text">🎬 <a href="${escHtml(b.src)}" target="_blank" rel="noopener">${escHtml(b.provider || 'video')}</a></span>`;
   }
   return `<span class="block-type">${escHtml(b.type)}</span>`;
 }

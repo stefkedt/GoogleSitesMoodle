@@ -59,13 +59,54 @@ function isSameSite(url, baseUrl) {
   } catch { return false; }
 }
 
+// Herken een ingesloten video-iframe en geef een embedbare URL terug (of null)
+function normalizeVideo(src) {
+  if (!src) return null;
+  try {
+    const u = new URL(src, 'https://x');
+    const host = u.hostname.replace(/^www\./, '');
+    // YouTube
+    if (host === 'youtube.com' || host === 'm.youtube.com') {
+      if (u.pathname.startsWith('/embed/')) {
+        const id = u.pathname.split('/')[2];
+        if (id) return { url: 'https://www.youtube.com/embed/' + id, provider: 'youtube' };
+      }
+      const v = u.searchParams.get('v');
+      if (v) return { url: 'https://www.youtube.com/embed/' + v, provider: 'youtube' };
+    }
+    if (host === 'youtube-nocookie.com' && u.pathname.startsWith('/embed/')) {
+      return { url: 'https://www.youtube-nocookie.com' + u.pathname.replace(/\/$/, ''), provider: 'youtube' };
+    }
+    if (host === 'youtu.be') {
+      const id = u.pathname.slice(1).split('/')[0];
+      if (id) return { url: 'https://www.youtube.com/embed/' + id, provider: 'youtube' };
+    }
+    // Vimeo
+    if (host === 'player.vimeo.com') return { url: u.origin + u.pathname, provider: 'vimeo' };
+    if (host === 'vimeo.com') {
+      const id = u.pathname.split('/').filter(Boolean)[0];
+      if (/^\d+$/.test(id)) return { url: 'https://player.vimeo.com/video/' + id, provider: 'vimeo' };
+    }
+    // Dailymotion
+    if (host === 'dailymotion.com' && u.pathname.startsWith('/embed/')) {
+      return { url: u.origin + u.pathname, provider: 'dailymotion' };
+    }
+    // Google Drive-video
+    if (host === 'drive.google.com' && /\/file\/d\//.test(u.pathname)) {
+      const id = u.pathname.split('/file/d/')[1].split('/')[0];
+      if (id) return { url: 'https://drive.google.com/file/d/' + id + '/preview', provider: 'drive' };
+    }
+  } catch {}
+  return null;
+}
+
 async function extractPageContent(page, url, imagesDir) {
   const h1s = await page.locator('h1').allTextContents().catch(() => []);
   const title = (h1s[0] || '').replace(/\s+/g, ' ').trim();
   const blocks = [];
 
   // Stap 1: tekst-elementen via gecombineerde locator (pierces shadow DOM)
-  const elements = await page.locator('h1, h2, h3, h4, h5, h6, p, li, img').evaluateAll(els => {
+  const elements = await page.locator('h1, h2, h3, h4, h5, h6, p, li, img, iframe').evaluateAll(els => {
     return els
       .filter(el => {
         if (el.closest('nav, header, [role="navigation"], [role="banner"]')) return false;
@@ -76,6 +117,7 @@ async function extractPageContent(page, url, imagesDir) {
       .map(el => {
         const tag = el.tagName.toLowerCase();
         if (tag === 'img') return { type: 'image', src: el.src || '', alt: el.alt || '' };
+        if (tag === 'iframe') return { type: 'video', src: el.src || el.getAttribute('data-src') || '' };
         const text = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
         if (!text) return null;
         if (/^h[1-6]$/.test(tag)) return { type: 'heading', level: parseInt(tag[1]), text };
@@ -110,6 +152,9 @@ async function extractPageContent(page, url, imagesDir) {
         const localSrc = imagesDir ? await downloadImage(el.src, imagesDir) : el.src;
         blocks.push({ ...el, src: localSrc, originalSrc: el.src });
       }
+    } else if (el.type === 'video') {
+      const v = normalizeVideo(el.src);
+      if (v) blocks.push({ type: 'video', src: v.url, provider: v.provider, originalSrc: el.src });
     } else {
       blocks.push(el);
     }
@@ -130,6 +175,7 @@ async function extractPageContent(page, url, imagesDir) {
       if (i === 0) return true;
       const prev = blocks[i - 1];
       if (b.type === 'image') return b.src !== prev.src; // afbeeldingen: vergelijk op src
+      if (b.type === 'video') return b.src !== prev.src; // video's: vergelijk op src
       return !(b.type === prev.type && b.text === prev.text);
     })
   };
