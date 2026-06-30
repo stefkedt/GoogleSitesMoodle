@@ -8,6 +8,7 @@ const { v4: uuidv4 } = require('uuid');
 const AdmZip = require('adm-zip');
 
 const TEMPLATE_PATH = path.join(__dirname, 'h5p-libraries-template.h5p');
+const EXTRA_LIBS_DIR = path.join(__dirname, 'h5p-extra-libs'); // o.a. H5P.Video
 
 function esc(str) {
   return (str || '')
@@ -62,6 +63,23 @@ function makeImage(block) {
   };
 }
 
+// Speelbare YouTube-video als H5P.Video-node
+function makeVideo(block) {
+  return {
+    content: {
+      params: {
+        sources: [{ path: block.src, mime: 'video/YouTube', copyright: { license: 'U' } }],
+        visuals: { fit: false, controls: true },
+        playback: { autoplay: false, loop: false }
+      },
+      library: 'H5P.Video 1.6',
+      metadata: { contentType: 'Video', license: 'U', title: 'Video' },
+      subContentId: uuidv4()
+    },
+    useSeparator: 'auto'
+  };
+}
+
 function blocksToColumnContent(blocks) {
   const content = [];
   let htmlBuffer = '';
@@ -84,7 +102,13 @@ function blocksToColumnContent(blocks) {
     } else if (block.type === 'list') {
       htmlBuffer += '<ul>' + block.items.map(i => `<li>${esc(i)}</li>`).join('') + '</ul>\n';
     } else if (block.type === 'video') {
-      htmlBuffer += `<p>🎬 Video: <a href="${esc(block.src)}">${esc(block.src)}</a></p>\n`;
+      if (block.provider === 'youtube') {
+        flushText();
+        content.push(makeVideo(block)); // echt afspeelbaar
+      } else {
+        // Vimeo/Dailymotion/Drive: link (H5P.Video YouTube-handler dekt deze niet betrouwbaar)
+        htmlBuffer += `<p>🎬 Video: <a href="${esc(block.src)}">${esc(block.src)}</a></p>\n`;
+      }
     }
   }
   flushText();
@@ -175,6 +199,7 @@ function buildH5PMeta(title) {
     preloadedDependencies: [
       { machineName: 'H5P.AdvancedText',      majorVersion: '1', minorVersion: '1' },
       { machineName: 'H5P.Image',             majorVersion: '1', minorVersion: '1' },
+      { machineName: 'H5P.Video',             majorVersion: '1', minorVersion: '6' },
       { machineName: 'H5P.Column',            majorVersion: '1', minorVersion: '18' },
       { machineName: 'H5P.InteractiveBook',   majorVersion: '1', minorVersion: '11' },
       { machineName: 'FontAwesome',           majorVersion: '4', minorVersion: '5' },
@@ -236,6 +261,11 @@ function buildH5PFile(siteResult, imagesSourceDir, destPath) {
 
     // Library files from template
     addLibrariesFromTemplate(archive);
+
+    // Extra bibliotheken (o.a. H5P.Video) — mappen op de root van de .h5p
+    if (fs.existsSync(EXTRA_LIBS_DIR)) {
+      archive.directory(EXTRA_LIBS_DIR, false);
+    }
 
     archive.finalize();
   });
